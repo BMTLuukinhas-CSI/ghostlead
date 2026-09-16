@@ -5,6 +5,7 @@ import com.ghostlead.api.repository.CompanyRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class CompanyService {
@@ -22,5 +23,10 @@ public class CompanyService {
 
     public List<Company> findAll() {
         return companyRepository.findAll();
+    }
+
+    public Company findById(UUID id) {
+        return companyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
     }
 }

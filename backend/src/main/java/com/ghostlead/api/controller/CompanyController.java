@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/companies")
@@ -33,5 +34,10 @@ public class CompanyController {
     @GetMapping
     public List<Company> findAll() {
         return companyService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Company findById(@PathVariable UUID id) {
+        return companyService.findById(id);
     }
 }
