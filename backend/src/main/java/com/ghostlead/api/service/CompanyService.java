@@ -1,6 +1,7 @@
 package com.ghostlead.api.service;
 
 import com.ghostlead.api.entity.Company;
+import com.ghostlead.api.exception.CompanyNotFoundException;
 import com.ghostlead.api.repository.CompanyRepository;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,6 @@ public class CompanyService {
 
     public Company findById(UUID id) {
         return companyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+                .orElseThrow(() -> new CompanyNotFoundException("Empresa não encontrada"));
     }
 }
