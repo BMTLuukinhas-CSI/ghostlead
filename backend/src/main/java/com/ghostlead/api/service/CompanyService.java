@@ -4,6 +4,8 @@ import com.ghostlead.api.entity.Company;
 import com.ghostlead.api.repository.CompanyRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CompanyService {
 
@@ -16,5 +18,9 @@ public class CompanyService {
     public Company createCompany(String name, String email) {
         Company company = new Company(name, email);
         return companyRepository.save(company);
+    }
+
+    public List<Company> findAll() {
+        return companyRepository.findAll();
     }
 }
