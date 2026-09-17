@@ -79,6 +79,29 @@ class GhostLeadApiApplicationTests {
     }
 
     @Test
+    void shouldReturn404WhenCreatingLeadWithNonExistentCompany()
+            throws Exception {
+
+        UUID nonExistentCompanyId = UUID.randomUUID();
+
+        String requestBody = """
+                {
+                    "name": "Lead Empresa Inexistente",
+                    "email": "lead.inexistente@ghostlead.com",
+                    "phone": "11911112222",
+                    "companyId": "%s"
+                }
+                """.formatted(nonExistentCompanyId);
+
+        mockMvc.perform(post("/api/leads")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error")
+                        .value("Empresa não encontrada"));
+    }
+
+    @Test
     void shouldReturnLeadWhenItExists() throws Exception {
 
         Company company = new Company(
@@ -184,6 +207,45 @@ class GhostLeadApiApplicationTests {
                         .value("pedro.atualizado@ghostlead.com"))
                 .andExpect(jsonPath("$.phone")
                         .value("11944443333"));
+    }
+
+    @Test
+    void shouldReturn404WhenUpdatingLeadWithNonExistentCompany()
+            throws Exception {
+
+        Company company = new Company(
+                "Empresa PUT Erro Teste",
+                "empresa.put.erro@ghostlead.com"
+        );
+
+        Company savedCompany = companyRepository.save(company);
+
+        Lead lead = new Lead(
+                "Lead Original",
+                "lead.original@ghostlead.com",
+                "11922223333",
+                savedCompany
+        );
+
+        Lead savedLead = leadRepository.save(lead);
+
+        UUID nonExistentCompanyId = UUID.randomUUID();
+
+        String requestBody = """
+                {
+                    "name": "Lead Atualizado",
+                    "email": "lead.atualizado@ghostlead.com",
+                    "phone": "11944445555",
+                    "companyId": "%s"
+                }
+                """.formatted(nonExistentCompanyId);
+
+        mockMvc.perform(put("/api/leads/" + savedLead.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error")
+                        .value("Empresa não encontrada"));
     }
 
     @Test
