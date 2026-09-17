@@ -1,6 +1,7 @@
 package com.ghostlead.api.controller;
 
 import com.ghostlead.api.dto.CreateCompanyRequest;
+import com.ghostlead.api.dto.UpdateCompanyRequest;
 import com.ghostlead.api.entity.Company;
 import com.ghostlead.api.service.CompanyService;
 import jakarta.validation.Valid;
@@ -39,5 +40,23 @@ public class CompanyController {
     @GetMapping("/{id}")
     public Company findById(@PathVariable UUID id) {
         return companyService.findById(id);
+    }
+
+    @PutMapping("/{id}")
+    public Company updateCompany(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateCompanyRequest request
+    ) {
+        return companyService.updateCompany(
+                id,
+                request.name(),
+                request.email()
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCompany(@PathVariable UUID id) {
+        companyService.deleteCompany(id);
     }
 }

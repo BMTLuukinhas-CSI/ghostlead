@@ -3,13 +3,11 @@ package com.ghostlead.api.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "companies")
-public class Company {
+@Table(name = "leads")
+public class Lead {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -18,19 +16,25 @@ public class Company {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "company")
-    private List<Lead> leads = new ArrayList<>();
+    @Column
+    private String phone;
 
-    protected Company() {
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
+    protected Lead() {
     }
 
-    public Company(String name, String email) {
+    public Lead(String name, String email, String phone, Company company) {
         this.name = name;
         this.email = email;
+        this.phone = phone;
+        this.company = company;
     }
 
     public UUID getId() {
@@ -45,8 +49,12 @@ public class Company {
         return email;
     }
 
-    public List<Lead> getLeads() {
-        return leads;
+    public String getPhone() {
+        return phone;
+    }
+
+    public Company getCompany() {
+        return company;
     }
 
     public void setName(String name) {
@@ -55,5 +63,13 @@ public class Company {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 }

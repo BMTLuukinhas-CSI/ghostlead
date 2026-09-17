@@ -30,4 +30,18 @@ public class CompanyService {
         return companyRepository.findById(id)
                 .orElseThrow(() -> new CompanyNotFoundException("Empresa não encontrada"));
     }
+
+    public Company updateCompany(UUID id, String name, String email) {
+        Company company = findById(id);
+
+        company.setName(name);
+        company.setEmail(email);
+
+        return companyRepository.save(company);
+    }
+
+    public void deleteCompany(UUID id) {
+        Company company = findById(id);
+        companyRepository.delete(company);
+    }
 }

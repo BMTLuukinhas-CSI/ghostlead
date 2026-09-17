@@ -15,4 +15,12 @@ public class GlobalExceptionHandler {
                 "error", exception.getMessage()
         );
     }
+
+    @ExceptionHandler(LeadNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleLeadNotFound(LeadNotFoundException exception) {
+        return Map.of(
+                "error", exception.getMessage()
+        );
+    }
 }
