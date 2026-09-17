@@ -102,6 +102,32 @@ class GhostLeadApiApplicationTests {
     }
 
     @Test
+    void shouldReturn400WhenCreatingLeadWithInvalidEmail()
+            throws Exception {
+
+        Company company = new Company(
+                "Empresa Email Invalido",
+                "empresa.email@ghostlead.com"
+        );
+
+        Company savedCompany = companyRepository.save(company);
+
+        String requestBody = """
+                {
+                    "name": "Lead Email Inválido",
+                    "email": "email-invalido",
+                    "phone": "11911112222",
+                    "companyId": "%s"
+                }
+                """.formatted(savedCompany.getId());
+
+        mockMvc.perform(post("/api/leads")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void shouldReturnLeadWhenItExists() throws Exception {
 
         Company company = new Company(
