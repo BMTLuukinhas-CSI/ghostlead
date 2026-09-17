@@ -1,3 +1,4 @@
+
 package com.ghostlead.api;
 
 import com.ghostlead.api.entity.Company;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -139,5 +141,47 @@ class GhostLeadApiApplicationTests {
                         .exists())
                 .andExpect(jsonPath("$[?(@.name == 'Ana Teste')]")
                         .exists());
+    }
+
+    @Test
+    void shouldUpdateLeadSuccessfully() throws Exception {
+
+        Company company = new Company(
+                "Empresa PUT Teste",
+                "empresa.put@ghostlead.com"
+        );
+
+        Company savedCompany = companyRepository.save(company);
+
+        Lead lead = new Lead(
+                "Pedro Antigo",
+                "pedro.antigo@ghostlead.com",
+                "11955554444",
+                savedCompany
+        );
+
+        Lead savedLead = leadRepository.save(lead);
+
+        String requestBody = """
+                {
+                    "name": "Pedro Atualizado",
+                    "email": "pedro.atualizado@ghostlead.com",
+                    "phone": "11944443333",
+                    "companyId": "%s"
+                }
+                """.formatted(savedCompany.getId());
+
+        mockMvc.perform(put("/api/leads/" + savedLead.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id")
+                        .value(savedLead.getId().toString()))
+                .andExpect(jsonPath("$.name")
+                        .value("Pedro Atualizado"))
+                .andExpect(jsonPath("$.email")
+                        .value("pedro.atualizado@ghostlead.com"))
+                .andExpect(jsonPath("$.phone")
+                        .value("11944443333"));
     }
 }
