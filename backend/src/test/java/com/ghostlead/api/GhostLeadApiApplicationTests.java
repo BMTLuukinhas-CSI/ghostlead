@@ -105,4 +105,39 @@ class GhostLeadApiApplicationTests {
                 .andExpect(jsonPath("$.phone")
                         .value("11988887777"));
     }
+
+    @Test
+    void shouldReturnAllLeads() throws Exception {
+
+        Company company = new Company(
+                "Empresa Lista Teste",
+                "empresa.lista@ghostlead.com"
+        );
+
+        Company savedCompany = companyRepository.save(company);
+
+        Lead lead1 = new Lead(
+                "Carlos Teste",
+                "carlos.teste@ghostlead.com",
+                "11977776666",
+                savedCompany
+        );
+
+        Lead lead2 = new Lead(
+                "Ana Teste",
+                "ana.teste@ghostlead.com",
+                "11966665555",
+                savedCompany
+        );
+
+        leadRepository.save(lead1);
+        leadRepository.save(lead2);
+
+        mockMvc.perform(get("/api/leads"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.name == 'Carlos Teste')]")
+                        .exists())
+                .andExpect(jsonPath("$[?(@.name == 'Ana Teste')]")
+                        .exists());
+    }
 }
