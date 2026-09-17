@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -183,5 +184,33 @@ class GhostLeadApiApplicationTests {
                         .value("pedro.atualizado@ghostlead.com"))
                 .andExpect(jsonPath("$.phone")
                         .value("11944443333"));
+    }
+
+    @Test
+    void shouldDeleteLeadSuccessfully() throws Exception {
+
+        Company company = new Company(
+                "Empresa DELETE Teste",
+                "empresa.delete@ghostlead.com"
+        );
+
+        Company savedCompany = companyRepository.save(company);
+
+        Lead lead = new Lead(
+                "Lucas Para Deletar",
+                "lucas.delete@ghostlead.com",
+                "11933332222",
+                savedCompany
+        );
+
+        Lead savedLead = leadRepository.save(lead);
+
+        mockMvc.perform(delete("/api/leads/" + savedLead.getId()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/leads/" + savedLead.getId()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error")
+                        .value("Lead não encontrado"));
     }
 }
