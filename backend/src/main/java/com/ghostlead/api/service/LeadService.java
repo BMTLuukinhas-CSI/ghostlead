@@ -2,6 +2,7 @@ package com.ghostlead.api.service;
 
 import com.ghostlead.api.entity.Company;
 import com.ghostlead.api.entity.Lead;
+import com.ghostlead.api.exception.CompanyNotFoundException;
 import com.ghostlead.api.exception.LeadNotFoundException;
 import com.ghostlead.api.repository.CompanyRepository;
 import com.ghostlead.api.repository.LeadRepository;
@@ -31,7 +32,7 @@ public class LeadService {
             UUID companyId
     ) {
         Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+                .orElseThrow(CompanyNotFoundException::new);
 
         Lead lead = new Lead(name, email, phone, company);
 
@@ -57,7 +58,7 @@ public class LeadService {
         Lead lead = findById(id);
 
         Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+                .orElseThrow(CompanyNotFoundException::new);
 
         lead.setName(name);
         lead.setEmail(email);
