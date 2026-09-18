@@ -326,4 +326,30 @@ class GhostLeadApiApplicationTests {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void shouldReturn400WhenCreatingLeadWithoutEmail() throws Exception {
+
+        Company company = new Company(
+                "Empresa Email Obrigatorio",
+                "empresa.email@ghostlead.com"
+        );
+
+        Company savedCompany = companyRepository.save(company);
+
+        String requestBody = """
+                {
+                    "name": "Lead Sem Email",
+                    "email": "",
+                    "phone": "11933334444",
+                    "companyId": "%s"
+                }
+                """.formatted(savedCompany.getId());
+
+        mockMvc.perform(post("/api/leads")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
+
+
 }
