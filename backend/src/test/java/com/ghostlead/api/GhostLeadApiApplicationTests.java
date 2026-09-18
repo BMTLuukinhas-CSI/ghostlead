@@ -301,6 +301,7 @@ class GhostLeadApiApplicationTests {
                 .andExpect(jsonPath("$.error")
                         .value("Lead não encontrado"));
     }
+
     @Test
     void shouldReturn400WhenCreatingLeadWithoutName() throws Exception {
 
@@ -351,5 +352,21 @@ class GhostLeadApiApplicationTests {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void shouldReturn400WhenCreatingLeadWithoutCompany()
+            throws Exception {
 
+        String requestBody = """
+                {
+                    "name": "Lead Sem Empresa",
+                    "email": "lead.sem.empresa@ghostlead.com",
+                    "phone": "11944445555"
+                }
+                """;
+
+        mockMvc.perform(post("/api/leads")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
 }
