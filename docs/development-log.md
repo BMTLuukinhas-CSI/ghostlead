@@ -88,3 +88,22 @@ Continuar a evolução da qualidade da API, trabalhando em:
 - Tratamento de UUID inválido
 - Paginação e filtros
 - Documentação da API
+
+## Atualização — MVP CRM com contas e pipeline
+
+### Implementado
+
+- Cadastro, login e logout com senha BCrypt, sessão HTTP-only e proteção CSRF.
+- Separação por conta no acesso a empresas, leads e indicadores.
+- CRUD de empresas e leads, filtros, paginação, etapas do funil, anotações e valor de oportunidade.
+- Dashboard com totais calculados a partir dos dados da conta.
+- Migrações Flyway, tratamento de erros, proteção de registros antigos sem titularidade, Docker Compose e workflow de CI.
+- Frontend React responsivo, instruções de execução e documentação de migração.
+
+### Pendências antes de produção
+
+- Revisar os dados antigos antes de associar qualquer empresa a uma nova conta.
+- Configurar HTTPS, backups e restauração, monitoramento, domínio, privacidade e recuperação de conta.
+- Confirmar no GitHub Actions os testes de backend, migrações e fluxo E2E em navegador.
+
+A entrega do MVP foi enviada na branch `feat/ghostlead-mvp`; a branch `main` não foi alterada.
