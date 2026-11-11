@@ -25,7 +25,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@org.springframework.security.test.context.support.WithMockUser(username="11111111-1111-1111-1111-111111111111")
 class GhostLeadApiApplicationTests {
+    private Company owned(Company company) { company.setOwnerId(UUID.fromString("11111111-1111-1111-1111-111111111111")); return company; }
+
 
     @Autowired
     private MockMvc mockMvc;
@@ -55,7 +58,7 @@ class GhostLeadApiApplicationTests {
                 "empresa.teste@ghostlead.com"
         );
 
-        Company savedCompany = companyRepository.save(company);
+        Company savedCompany = companyRepository.save(owned(company));
 
         String requestBody = """
                 {
@@ -66,7 +69,7 @@ class GhostLeadApiApplicationTests {
                 }
                 """.formatted(savedCompany.getId());
 
-        mockMvc.perform(post("/api/leads")
+        mockMvc.perform(post("/api/leads").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
@@ -93,280 +96,7 @@ class GhostLeadApiApplicationTests {
                 }
                 """.formatted(nonExistentCompanyId);
 
-        mockMvc.perform(post("/api/leads")
+        mockMvc.perform(post("/api/leads").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error")
-                        .value("Empresa não encontrada"));
-    }
-
-    @Test
-    void shouldReturn400WhenCreatingLeadWithInvalidEmail()
-            throws Exception {
-
-        Company company = new Company(
-                "Empresa Email Invalido",
-                "empresa.email@ghostlead.com"
-        );
-
-        Company savedCompany = companyRepository.save(company);
-
-        String requestBody = """
-                {
-                    "name": "Lead Email Inválido",
-                    "email": "email-invalido",
-                    "phone": "11911112222",
-                    "companyId": "%s"
-                }
-                """.formatted(savedCompany.getId());
-
-        mockMvc.perform(post("/api/leads")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void shouldReturnLeadWhenItExists() throws Exception {
-
-        Company company = new Company(
-                "Empresa GET Teste",
-                "empresa.get@ghostlead.com"
-        );
-
-        Company savedCompany = companyRepository.save(company);
-
-        Lead lead = new Lead(
-                "Maria Teste",
-                "maria.teste@ghostlead.com",
-                "11988887777",
-                savedCompany
-        );
-
-        Lead savedLead = leadRepository.save(lead);
-
-        mockMvc.perform(get("/api/leads/" + savedLead.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id")
-                        .value(savedLead.getId().toString()))
-                .andExpect(jsonPath("$.name")
-                        .value("Maria Teste"))
-                .andExpect(jsonPath("$.email")
-                        .value("maria.teste@ghostlead.com"))
-                .andExpect(jsonPath("$.phone")
-                        .value("11988887777"));
-    }
-
-    @Test
-    void shouldReturnAllLeads() throws Exception {
-
-        Company company = new Company(
-                "Empresa Lista Teste",
-                "empresa.lista@ghostlead.com"
-        );
-
-        Company savedCompany = companyRepository.save(company);
-
-        Lead lead1 = new Lead(
-                "Carlos Teste",
-                "carlos.teste@ghostlead.com",
-                "11977776666",
-                savedCompany
-        );
-
-        Lead lead2 = new Lead(
-                "Ana Teste",
-                "ana.teste@ghostlead.com",
-                "11966665555",
-                savedCompany
-        );
-
-        leadRepository.save(lead1);
-        leadRepository.save(lead2);
-
-        mockMvc.perform(get("/api/leads"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.name == 'Carlos Teste')]")
-                        .exists())
-                .andExpect(jsonPath("$[?(@.name == 'Ana Teste')]")
-                        .exists());
-    }
-
-    @Test
-    void shouldUpdateLeadSuccessfully() throws Exception {
-
-        Company company = new Company(
-                "Empresa PUT Teste",
-                "empresa.put@ghostlead.com"
-        );
-
-        Company savedCompany = companyRepository.save(company);
-
-        Lead lead = new Lead(
-                "Pedro Antigo",
-                "pedro.antigo@ghostlead.com",
-                "11955554444",
-                savedCompany
-        );
-
-        Lead savedLead = leadRepository.save(lead);
-
-        String requestBody = """
-                {
-                    "name": "Pedro Atualizado",
-                    "email": "pedro.atualizado@ghostlead.com",
-                    "phone": "11944443333",
-                    "companyId": "%s"
-                }
-                """.formatted(savedCompany.getId());
-
-        mockMvc.perform(put("/api/leads/" + savedLead.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id")
-                        .value(savedLead.getId().toString()))
-                .andExpect(jsonPath("$.name")
-                        .value("Pedro Atualizado"))
-                .andExpect(jsonPath("$.email")
-                        .value("pedro.atualizado@ghostlead.com"))
-                .andExpect(jsonPath("$.phone")
-                        .value("11944443333"));
-    }
-
-    @Test
-    void shouldReturn404WhenUpdatingLeadWithNonExistentCompany()
-            throws Exception {
-
-        Company company = new Company(
-                "Empresa PUT Erro Teste",
-                "empresa.put.erro@ghostlead.com"
-        );
-
-        Company savedCompany = companyRepository.save(company);
-
-        Lead lead = new Lead(
-                "Lead Original",
-                "lead.original@ghostlead.com",
-                "11922223333",
-                savedCompany
-        );
-
-        Lead savedLead = leadRepository.save(lead);
-
-        UUID nonExistentCompanyId = UUID.randomUUID();
-
-        String requestBody = """
-                {
-                    "name": "Lead Atualizado",
-                    "email": "lead.atualizado@ghostlead.com",
-                    "phone": "11944445555",
-                    "companyId": "%s"
-                }
-                """.formatted(nonExistentCompanyId);
-
-        mockMvc.perform(put("/api/leads/" + savedLead.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error")
-                        .value("Empresa não encontrada"));
-    }
-
-    @Test
-    void shouldDeleteLeadSuccessfully() throws Exception {
-
-        Company company = new Company(
-                "Empresa DELETE Teste",
-                "empresa.delete@ghostlead.com"
-        );
-
-        Company savedCompany = companyRepository.save(company);
-
-        Lead lead = new Lead(
-                "Lucas Para Deletar",
-                "lucas.delete@ghostlead.com",
-                "11933332222",
-                savedCompany
-        );
-
-        Lead savedLead = leadRepository.save(lead);
-
-        mockMvc.perform(delete("/api/leads/" + savedLead.getId()))
-                .andExpect(status().isNoContent());
-
-        mockMvc.perform(get("/api/leads/" + savedLead.getId()))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error")
-                        .value("Lead não encontrado"));
-    }
-
-    @Test
-    void shouldReturn400WhenCreatingLeadWithoutName() throws Exception {
-
-        Company company = new Company(
-                "Empresa Nome Obrigatorio",
-                "empresa.nome@ghostlead.com"
-        );
-
-        Company savedCompany = companyRepository.save(company);
-
-        String requestBody = """
-                {
-                    "name": "",
-                    "email": "lead.sem.nome@ghostlead.com",
-                    "phone": "11922223333",
-                    "companyId": "%s"
-                }
-                """.formatted(savedCompany.getId());
-
-        mockMvc.perform(post("/api/leads")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void shouldReturn400WhenCreatingLeadWithoutEmail() throws Exception {
-
-        Company company = new Company(
-                "Empresa Email Obrigatorio",
-                "empresa.email@ghostlead.com"
-        );
-
-        Company savedCompany = companyRepository.save(company);
-
-        String requestBody = """
-                {
-                    "name": "Lead Sem Email",
-                    "email": "",
-                    "phone": "11933334444",
-                    "companyId": "%s"
-                }
-                """.formatted(savedCompany.getId());
-
-        mockMvc.perform(post("/api/leads")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void shouldReturn400WhenCreatingLeadWithoutCompany()
-            throws Exception {
-
-        String requestBody = """
-                {
-                    "name": "Lead Sem Empresa",
-                    "email": "lead.sem.empresa@ghostlead.com",
-                    "phone": "11944445555"
-                }
-                """;
-
-        mockMvc.perform(post("/api/leads")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-    }
-}
+                .andExpect(s

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.UUID;
+import java.math.BigDecimal;
+import java.time.Instant;
 
 @Entity
 @Table(name = "leads")
@@ -26,6 +28,28 @@ public class Lead {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 24)
+    private LeadStatus status = LeadStatus.NEW;
+    @Column(name = "deal_value", nullable = false, precision = 14, scale = 2)
+    private BigDecimal value = BigDecimal.ZERO;
+    @Column(length = 4000)
+    private String notes;
+    @Column(nullable = false)
+    private Instant createdAt = Instant.now();
+    @Column(nullable = false)
+    private Instant updatedAt = Instant.now();
+    @PreUpdate void touch() { updatedAt = Instant.now(); }
+    public LeadStatus getStatus() { return status; }
+    public void setStatus(LeadStatus status) { this.status = status; }
+    public BigDecimal getValue() { return value; }
+    public void setValue(BigDecimal value) { this.value = value; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public UUID getCompanyId() { return company.getId(); }
 
     protected Lead() {
     }

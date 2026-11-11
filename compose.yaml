@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ghostlead
+      POSTGRES_USER: ghostlead
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - ghostlead-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ghostlead -d ghostlead"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+  api:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/ghostlead
+      DB_USER: ghostlead
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+  web:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8088}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+volumes:
+  ghostlead-data:

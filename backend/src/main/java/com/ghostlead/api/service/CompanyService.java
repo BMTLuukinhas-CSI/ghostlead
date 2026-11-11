@@ -1,47 +1,31 @@
 package com.ghostlead.api.service;
-
 import com.ghostlead.api.entity.Company;
 import com.ghostlead.api.exception.CompanyNotFoundException;
-import com.ghostlead.api.repository.CompanyRepository;
+import com.ghostlead.api.repository.*;
+import com.ghostlead.api.security.CurrentUser;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.UUID;
-
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import java.util.*;
 @Service
+@Transactional
 public class CompanyService {
-
-    private final CompanyRepository companyRepository;
-
-    public CompanyService(CompanyRepository companyRepository) {
-        this.companyRepository = companyRepository;
+    private final CompanyRepository companies;
+    private final LeadRepository leads;
+    private final CurrentUser current;
+    public CompanyService(CompanyRepository companies, LeadRepository leads, CurrentUser current) { this.companies=companies;this.leads=leads;this.current=current; }
+    public Company createCompany(String name,String email) {
+        Company c=new Company(name.strip(),email.strip().toLowerCase(Locale.ROOT)); c.setOwnerId(current.id()); return companies.save(c);
     }
-
-    public Company createCompany(String name, String email) {
-        Company company = new Company(name, email);
-        return companyRepository.save(company);
+    @Transactional(readOnly=true) public List<Company> findAll() { return companies.findByOwnerIdOrderByNameAsc(current.id()); }
+    @Transactional(readOnly=true) public Company findById(UUID id) { return companies.findByIdAndOwnerId(id,current.id()).orElseThrow(CompanyNotFoundException::new); }
+    public Company updateCompany(UUID id,String name,String email) {
+        Company c=findById(id);c.setName(name.strip());c.setEmail(email.strip().toLowerCase(Locale.ROOT));return companies.save(c);
     }
-
-    public List<Company> findAll() {
-        return companyRepository.findAll();
-    }
-
-    public Company findById(UUID id) {
-        return companyRepository.findById(id)
-                .orElseThrow(() -> new CompanyNotFoundException("Empresa não encontrada"));
-    }
-
-    public Company updateCompany(UUID id, String name, String email) {
-        Company company = findById(id);
-
-        company.setName(name);
-        company.setEmail(email);
-
-        return companyRepository.save(company);
-    }
-
     public void deleteCompany(UUID id) {
-        Company company = findById(id);
-        companyRepository.delete(company);
+        Company c=findById(id);
+        if(leads.existsByCompany_Id(id)) throw new ResponseStatusException(HttpStatus.CONFLICT,"Remova ou transfira os leads desta empresa antes de excluí-la");
+        companies.delete(c);
     }
 }

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "companies")
+@Table(name = "companies", uniqueConstraints = @UniqueConstraint(columnNames = {"owner_id", "email"}))
 public class Company {
 
     @Id
@@ -18,12 +18,19 @@ public class Company {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     @JsonIgnore
     @OneToMany(mappedBy = "company")
     private List<Lead> leads = new ArrayList<>();
+
+    @JsonIgnore
+    @Column(name = "owner_id")
+    private UUID ownerId;
+
+    public UUID getOwnerId() { return ownerId; }
+    public void setOwnerId(UUID ownerId) { this.ownerId = ownerId; }
 
     protected Company() {
     }
